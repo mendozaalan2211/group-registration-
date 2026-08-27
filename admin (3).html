@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registrations — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#EEF0EA; --ink:#15171A; --ink-soft:#4B4E48;
+    --accent:#1F5C4D; --gold:#B8901F; --line:#C7C9BE; --error:#B23A2E;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Space Grotesk',sans-serif; min-height:100vh;
+  }
+  .gate{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:16px; padding:24px;
+  }
+  .gate h1{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:0;}
+  .gate input{
+    border:1.5px solid var(--line); background:#fff; padding:12px 14px;
+    font-family:'Space Mono',monospace; font-size:18px; letter-spacing:0.2em;
+    text-align:center; width:180px; outline:none;
+  }
+  .gate input:focus{border-color:var(--accent);}
+  .gate button{
+    background:var(--ink); color:var(--paper); border:none; padding:12px 20px;
+    font-family:'Space Grotesk',sans-serif; font-weight:500; cursor:pointer;
+  }
+  .gate button:hover{background:var(--accent);}
+  .gate .err{color:var(--error); font-size:13px; min-height:16px;}
+
+  .dash{display:none; max-width:1000px; margin:0 auto; padding:40px 20px;}
+  .dash.show{display:block;}
+  .top{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:22px;}
+  .top h1{font-family:'Fraunces',serif; font-weight:600; font-size:30px; margin:0;}
+  .count{font-family:'Space Mono',monospace; color:var(--accent); font-size:14px;}
+  .actions{display:flex; gap:10px;}
+  .btn{
+    background:#fff; border:1.5px solid var(--line); color:var(--ink);
+    padding:9px 14px; font-family:'Space Grotesk',sans-serif; font-size:13px;
+    cursor:pointer; border-radius:2px;
+  }
+  .btn:hover{border-color:var(--accent); color:var(--accent);}
+  table{width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);}
+  th,td{text-align:left; padding:11px 14px; font-size:14px; border-bottom:1px solid var(--line);}
+  th{
+    font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink-soft); background:#F5F6F1;
+  }
+  tr:last-child td{border-bottom:none;}
+  .empty{padding:40px; text-align:center; color:var(--ink-soft); font-size:14px;}
+  .loading{padding:40px; text-align:center; color:var(--ink-soft); font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <h1>Enter admin PIN</h1>
+  <input type="password" id="pinInput" inputmode="numeric" maxlength="4" placeholder="••••" autofocus>
+  <button id="pinBtn">Unlock</button>
+  <div class="err" id="pinErr"></div>
+</div>
+
+<div class="dash" id="dash">
+  <div class="top">
+    <div>
+      <h1>Registrations</h1>
+      <div class="count" id="countLabel">—</div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="refreshBtn">Refresh</button>
+      <button class="btn" id="exportBtn">Export CSV</button>
+    </div>
+  </div>
+  <div id="tableWrap"><div class="loading">Loading…</div></div>
+</div>
+
+<script>
+  // ── Same values as index.html ──
+  const SUPABASE_URL = "https://yjhessebmbiorkkbdeag.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_XXpOP3nmDe_Qxsg5yE0wyw_YZkWt1aG";
+  const TABLE_NAME = "registrations";
+  const ADMIN_PIN = "1234"; // change this
+  // ────────────────────────────────
+
+  let rows = [];
+  let supabase = null;
+  try{
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }catch(e){
+    console.error('Supabase failed to load:', e);
+  }
+
+  document.getElementById('pinBtn').addEventListener('click', tryUnlock);
+  document.getElementById('pinInput').addEventListener('keydown', e => { if(e.key === 'Enter') tryUnlock(); });
+
+  function tryUnlock(){
+    const val = document.getElementById('pinInput').value;
+    if(val === ADMIN_PIN){
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('dash').classList.add('show');
+      loadRows();
+    } else {
+      document.getElementById('pinErr').textContent = 'Incorrect PIN.';
+    }
+  }
+
+  async function loadRows(){
+    document.getElementById('tableWrap').innerHTML = '<div class="loading">Loading…</div>';
+    if(!supabase){
+      document.getElementById('tableWrap').innerHTML = '<div class="empty">Supabase isn\'t configured yet — add SUPABASE_URL and SUPABASE_ANON_KEY at the top of this file.</div>';
+      document.getElementById('countLabel').textContent = '—';
+      return;
+    }
+    const { data, error } = await supabase.from(TABLE_NAME).select('*').order('created_at', { ascending: false });
+    if(error){
+      document.getElementById('tableWrap').innerHTML = `<div class="empty">Couldn't load registrations: ${error.message}</div>`;
+      return;
+    }
+    rows = data || [];
+    document.getElementById('countLabel').textContent = `${rows.length} registered`;
+    renderTable();
+  }
+
+  function renderTable(){
+    if(rows.length === 0){
+      document.getElementById('tableWrap').innerHTML = '<div class="empty">No registrations yet.</div>';
+      return;
+    }
+    let html = '<table><thead><tr><th>Name</th><th>City</th><th>Age</th><th>Phone</th><th>Registered</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      const date = r.created_at ? new Date(r.created_at).toLocaleString() : '—';
+      html += `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.city)}</td><td>${escapeHtml(String(r.age))}</td><td>${escapeHtml(r.phone)}</td><td>${date}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('tableWrap').innerHTML = html;
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', loadRows);
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    if(rows.length === 0) return;
+    const header = ['Name','City','Age','Phone','Registered'];
+    const lines = [header.join(',')];
+    rows.forEach(r => {
+      const date = r.created_at ? new Date(r.created_at).toLocaleString() : '';
+      const vals = [r.name, r.city, r.age, r.phone, date].map(v => `"${String(v).replace(/"/g,'""')}"`);
+      lines.push(vals.join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'registrations.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
+
+</body>
+</html>
