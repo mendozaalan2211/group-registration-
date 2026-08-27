@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#EEF0EA;
+    --ink:#15171A;
+    --ink-soft:#4B4E48;
+    --accent:#1F5C4D;
+    --accent-soft:#DCE7DF;
+    --line:#C7C9BE;
+    --error:#B23A2E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Space Grotesk',sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ width:100%; max-width:420px; }
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:500;
+    margin:0 0 8px 2px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:34px;
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    margin:0 0 8px 0;
+  }
+  .sub{
+    font-size:15px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin:0 0 26px 2px;
+  }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:24px 22px 22px 22px;
+  }
+  .field{ margin-bottom:16px; }
+  label{
+    display:block;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  input{
+    width:100%;
+    border:1.5px solid var(--line);
+    border-radius:5px;
+    background:#fbfbf9;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px;
+    color:var(--ink);
+    padding:13px 12px;
+    outline:none;
+    transition:border-color 0.15s ease;
+  }
+  input::placeholder{ color:#B7BAB1; }
+  input:focus{ border-color:var(--accent); background:#fff; }
+  input.invalid{ border-color:var(--error); }
+  .err{
+    font-size:12.5px;
+    color:var(--error);
+    margin-top:5px;
+    min-height:2px;
+  }
+  button{
+    margin-top:6px;
+    width:100%;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:5px;
+    padding:15px 18px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:500;
+    font-size:15.5px;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  button:hover{ background:var(--accent); }
+  button:disabled{ opacity:0.55; }
+  .fine{
+    text-align:center;
+    font-size:11.5px;
+    color:#9a9d95;
+    margin-top:14px;
+  }
+  .success{ display:none; text-align:center; padding:20px 4px; }
+  .success.show{ display:block; }
+  .success .check{
+    width:44px;height:44px;
+    border-radius:50%;
+    background:var(--accent-soft);
+    color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px auto;
+    font-size:20px;
+  }
+  .success h2{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:24px;
+    margin:0 0 6px 0;
+  }
+  .success p{ color:var(--ink-soft); font-size:14.5px; margin:0; }
+  .hide{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">Registration</div>
+  <h1>Sign up</h1>
+  <p class="sub">Fill in your info below. Takes less than a minute.</p>
+
+  <div class="card">
+    <div id="formWrap">
+      <form id="regForm" novalidate>
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" placeholder="Jordan Rivera" autocomplete="name" required>
+          <div class="err" id="err-name"></div>
+        </div>
+        <div class="field">
+          <label for="city">City</label>
+          <input type="text" id="city" placeholder="Whittier, CA" autocomplete="address-level2" required>
+          <div class="err" id="err-city"></div>
+        </div>
+        <div class="field">
+          <label for="age">Age</label>
+          <input type="number" id="age" placeholder="21" inputmode="numeric" pattern="[0-9]*" min="1" max="120" required>
+          <div class="err" id="err-age"></div>
+        </div>
+        <div class="field">
+          <label for="phone">Phone number</label>
+          <input type="tel" id="phone" placeholder="(562) 555-1234" inputmode="numeric" required>
+          <div class="err" id="err-phone"></div>
+        </div>
+        <button type="submit" id="submitBtn">Submit</button>
+        <div class="fine">By registering you agree to be contacted about this list.</div>
+      </form>
+    </div>
+
+    <div class="success" id="successMsg">
+      <div class="check">✓</div>
+      <h2>You're in.</h2>
+      <p>Your registration was received.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://yjhessebmbiorkkbdeag.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_XXpOP3nmDe_Qxsg5yE0wyw_YZkWt1aG";
+  const TABLE_NAME = "registrations";
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const phoneInput = document.getElementById('phone');
+  phoneInput.addEventListener('input', () => {
+    let digits = phoneInput.value.replace(/\D/g,'').slice(0,10);
+    let out = digits;
+    if(digits.length > 6) out = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    else if(digits.length > 3) out = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+    else if(digits.length > 0) out = `(${digits}`;
+    phoneInput.value = out;
+    phoneInput.dataset.digits = digits;
+  });
+
+  function setError(id, msg){
+    document.getElementById(id).textContent = msg || '';
+    const inputId = id.replace('err-','');
+    document.getElementById(inputId).classList.toggle('invalid', !!msg);
+  }
+
+  document.getElementById('regForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const age = document.getElementById('age').value.trim();
+    const phoneDigits = (phoneInput.dataset.digits || phoneInput.value.replace(/\D/g,''));
+
+    let valid = true;
+    setError('err-name',''); setError('err-city',''); setError('err-age',''); setError('err-phone','');
+
+    if(!name){ setError('err-name','Enter your full name.'); valid = false; }
+    if(!city){ setError('err-city','Enter your city.'); valid = false; }
+    if(!age || Number(age) < 1 || Number(age) > 120){ setError('err-age','Enter a valid age.'); valid = false; }
+    if(phoneDigits.length !== 10){ setError('err-phone','Enter a 10-digit US phone number.'); valid = false; }
+
+    if(!valid) return;
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+
+    const formattedPhone = `(${phoneDigits.slice(0,3)}) ${phoneDigits.slice(3,6)}-${phoneDigits.slice(6)}`;
+
+    try{
+      const { error } = await supabase.from(TABLE_NAME).insert([{
+        name, city, age: Number(age), phone: formattedPhone
+      }]);
+      if(error) throw error;
+      document.getElementById('formWrap').classList.add('hide');
+      document.getElementById('successMsg').classList.add('show');
+    }catch(err){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit';
+      setError('err-phone', 'Something went wrong. Please try again.');
+      console.error(err);
+    }
+  });
+</script>
+
+</body>
+</html>
